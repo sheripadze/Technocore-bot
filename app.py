@@ -1,37 +1,32 @@
 import os
-import time
 import requests
 from flask import Flask
-from threading import Thread
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
-@app.route('/')
-@app.route('/keepalive')
-def home():
-    return "Technocore Agent Bot is Active!", 200
+# თქვენი DID გასაღები
+DID = "did:key:z6MkpNsj9a2q7kLr3UmDoMy8nYvePMV3uAhE7SRTT6KWE19U"
+CHECKIN_URL = "https://overheard-five.vercel.app/api/checkin"
 
-MY_DID = os.environ.get("MY_DID", "did:key:z6MkpNsj9a2q7kLr3UmDoMy8nYvePMV3uAhE7SRTT6KWE19U")
-
-def send_checkin():
-    url = "https://overheard-five.vercel.app/api/checkin"
-    payload = {"did": MY_DID}
-    headers = {"Content-Type": "application/json"}
+def perform_checkin():
     try:
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Check-in response: {response.status_code}")
+        payload = {"did": DID}
+        response = requests.post(CHECKIN_URL, json=payload, timeout=15)
+        print(f"Check-in triggered! Status Code: {response.status_code}, Response: {response.text}")
     except Exception as e:
-        print(f"Error sending check-in: {e}")
+        print(f"Error during check-in: {e}")
 
-def checkin_loop():
-    time.sleep(5)
-    while True:
-        send_checkin()
-        time.sleep(900)
+# შევქმნათ განრიგი, რომ ავტომატურად გააკეთოს ჩექ-ინი ყოველ 6 საათში ერთხელ
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=perform_checkin, trigger="interval", hours=6)
+scheduler.start()
 
-Thread(target=checkin_loop, daemon=True).start()
+@app.route("/")
+def home():
+    return "Technocore Bot is active and running!"
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
-  
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+    
