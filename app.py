@@ -2,12 +2,13 @@ import os
 import requests
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime, timedelta
+from datetime import datetime
 
 app = Flask(__name__)
 
 DID = "did:key:z6MkpNsj9a2q7kLr3UmDoMy8nYvePMV3uAhE7SRTT6KWE19U"
-CHECKIN_URL = "https://overheard-five.vercel.app/api/checkin"
+# გადავცვალოთ სწორ API მისამართზე
+CHECKIN_URL = "https://technocore.chat/api/checkin"
 
 def perform_checkin():
     try:
@@ -18,7 +19,6 @@ def perform_checkin():
         print(f"Error during check-in: {e}")
 
 scheduler = BackgroundScheduler()
-# გავუშვათ ზუსტად ახლავე, ხოლო შემდეგ გავაგრძელოთ ყოველ 6 საათში ერთხელ
 scheduler.add_job(func=perform_checkin, trigger="interval", hours=6, next_run_time=datetime.now())
 scheduler.start()
 
